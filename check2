@@ -1,0 +1,143 @@
+import cv2
+import os
+import string
+from tkinter import *
+from tkinter import filedialog
+from PIL import ImageTk, Image
+
+
+# from stegpixel1 import *
+
+
+def savef():
+    key_info = keyyy.get()
+    text_info = texttt.get()
+
+    file = open("steg_info" + ".txt", 'w')
+    file.write(key_info)
+    file.close()
+    file2 = open("txt_info" + ".txt", 'w')
+    file2.write(text_info)
+    file2.close()
+
+    label1 = Label(window, text="Your information has been saved").pack()
+    Label2 = Label(window, text="Click the button below to choose a picture to hide your information in").pack()
+    Bttn = Button(window, text="Browse", command=p21).pack()
+
+
+window = Tk()
+window.geometry("800x600")
+window.title("Stegpixel")
+
+kl = Label(window, text="Enter your security key : ")
+kl.pack()
+keyyy = Entry(window)
+keyyy.pack()
+
+tl = Label(window, text="Enter your secret text to hide : ")
+tl.pack()
+texttt = Entry(window)
+texttt.pack()
+
+B1 = Button(window, text="Save", command=savef)
+B1.pack()
+
+
+def p21():
+    global imgf
+    global img1
+    f1 = filedialog.askopenfilename(initialdir="C:/Users", title="Choose your picture",
+                                    filetypes=(("jpg files", "*.jpg"), ("all files", "*.*")))
+
+    imgf = ImageTk.PhotoImage(Image.open(f1))
+
+    top = Toplevel()
+    top.title("Stegpixel")
+    top.geometry("800x600")
+    imgl = Label(top, image=imgf).pack()
+    imgb1 = Button(top, text="Hide", command=btn3).pack()
+
+    img1 = cv2.imread(f1)
+    i = img1.shape[0]
+    j = img1.shape[1]
+
+
+def btn3():
+    global f, d, a, b, c, key1
+    d = {}
+    f = {}
+    for i in range(255):
+        d[chr(i)] = i
+        f[i] = chr(1)
+
+    key = keyyy.get()
+    text = texttt.get()
+
+    key1 = 0
+    a = 0
+    b = 0
+    c = 0
+
+    t = len(text)
+
+    for i in range(t):
+        img1[a, b, c] = d[text[i]] ^ d[key[key1]]
+        b = b + 1
+        c = c + 1
+        c = (c + 1) % 3
+        key1 = (key1 + 1) % len(key)
+
+    cv2.imwrite("New_img.jpg", img1)
+
+    top1 = Toplevel()
+    top1.geometry("800x600")
+    top1.title("Stegpixel")
+    ll = Label(top1, text="The information was hidden successfully").pack()
+    ll1 = Label(top1, text="Click here to extrct your hidden data").pack()
+    bt1 = Button(top1, text="Extract", command=ex1).pack()
+    ll2 = Label(top1, text="Click here to exit the program").pack()
+    bt2 = Button(top1, text="Exit", command=ext).pack()
+
+
+def ext():
+    exit()
+
+
+def ex1():
+    global key2, top2
+
+    top2 = Toplevel()
+    top2.geometry("800x600")
+    top2.title("Stegpixel")
+
+    lbb = Label(top2, text="Type the Security key below:").pack()
+    key2 = Entry(top2).pack()
+    bttt = Button(top2, text = "Go", command = dec).pack()
+
+def dec():
+    key = keyyy.get()
+    text = texttt.get()
+
+    key1 = 0
+    t = len(text)
+    a = 0
+    b = 0
+    c = 0
+
+    decrypt = ""
+    file = open("steg_info.txt", 'r')
+    vr = file.read()
+
+    if key2 in vr:
+        for i in range(t):
+            decrypt += f[img1[b, c, a] ^ d[key[key1]]]
+            b = b + 1
+            c = c + 1
+            c = (c + 1) % 3
+            key1 = (key1 + 1) % len(keyyy.get())
+        lbb1 = Label(top2, text="Hidden text is :" + decrypt).pack()
+    else:
+        lbb2 = Label(top2, text="Keys did not match").pack()
+
+
+window.mainloop()
